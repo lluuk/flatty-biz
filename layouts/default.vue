@@ -64,6 +64,7 @@
 import { ref } from '@vue/composition-api'
 
 export default {
+  middleware: ['auth'],
   setup(props, { root: $vuetify }) {
     const drawer = ref(null)
     const items = [

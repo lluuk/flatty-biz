@@ -60,6 +60,7 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     '@nuxtjs/pwa',
+    '@nuxtjs/toast',
     [
       '@nuxtjs/firebase',
       {
@@ -77,8 +78,7 @@ export default {
           auth: {
             persistence: 'local', // default
             initialize: {
-              // onAuthStateChangedMutation: 'ON_AUTH_STATE_CHANGED_MUTATION',
-              // onAuthStateChangedAction: 'onAuthStateChangedAction'
+              onAuthStateChangedAction: 'auth/onAuthStateChanged',
             },
 
             ssr: false, // default
