@@ -90,8 +90,8 @@ export default {
           userEmail.value,
           password.value
         )
-        $router.push('/')
         $toast.success('Welcome back', { duration: 3000 })
+        $router.go('/')
       } catch (e) {
         $toast.error(e, { duration: 3000 })
       }

@@ -2,7 +2,12 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" app clipped>
       <v-list dense>
-        <v-list-item v-for="item in items" :key="item.text" link>
+        <v-list-item
+          v-for="item in items"
+          :key="item.text"
+          link
+          v-on="item.text === 'Logout' && { click: logoutClickHandler }"
+        >
           <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-action>
@@ -65,7 +70,7 @@ import { ref } from '@vue/composition-api'
 
 export default {
   middleware: ['auth'],
-  setup(props, { root: $vuetify }) {
+  setup(props, { root }) {
     const drawer = ref(null)
     const items = [
       { icon: 'mdi-trending-up', text: 'Most Popular' },
@@ -73,12 +78,24 @@ export default {
       { icon: 'mdi-history', text: 'History' },
       { icon: 'mdi-playlist-play', text: 'Playlists' },
       { icon: 'mdi-clock', text: 'Watch Later' },
+      { icon: 'mdi-logout-variant', text: 'Logout' },
     ]
+
+    const logoutClickHandler = async () => {
+      const { $fireAuth, $toast, $router } = root
+      try {
+        await $fireAuth.signOut()
+        $router.push('/login')
+      } catch (e) {
+        $toast.error(e, { duration: 3000 })
+      }
+    }
 
     // $vuetify.theme.dark = false
     return {
       drawer,
       items,
+      logoutClickHandler,
     }
   },
 }
