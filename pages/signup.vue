@@ -3,7 +3,7 @@
     <v-col cols="12" sm="8" md="4">
       <v-card class="elevation-12">
         <v-toolbar color="primary" dark flat>
-          <v-toolbar-title>Login form</v-toolbar-title>
+          <v-toolbar-title>Signup form</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
           <v-form>
@@ -17,6 +17,30 @@
               required
               @input="v$.userEmail.$touch()"
               @blur="v$.userEmail.$touch()"
+            ></v-text-field>
+
+            <v-text-field
+              v-model="name"
+              :error-messages="nameErrors"
+              label="First and last name / Company name"
+              name="name"
+              prepend-icon="mdi-account"
+              type="text"
+              required
+              @input="v$.name.$touch()"
+              @blur="v$.name.$touch()"
+            ></v-text-field>
+
+            <v-text-field
+              v-model="phone"
+              :error-messages="phoneErrors"
+              label="Phone Number"
+              name="phone"
+              prepend-icon="mdi-cellphone"
+              type="tel"
+              required
+              @input="v$.phone.$touch()"
+              @blur="v$.phone.$touch()"
             ></v-text-field>
 
             <v-text-field
@@ -36,7 +60,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" :disabled="v$.$invalid" @click="handleSubmit"
-            >Login</v-btn
+            >Singup</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -54,16 +78,22 @@ export default {
 
   setup(props, { root }) {
     const userEmail = ref('')
+    const name = ref('')
+    const phone = ref('')
     const password = ref('')
 
     const rules = {
       userEmail: { required, email, $autoDirty: true },
+      name: { required },
+      phone: { required },
       password: { required, minLength: minLength(6), $autoDirty: true },
     }
 
     const v$ = useVuelidate(rules, {
       userEmail,
       password,
+      name,
+      phone,
     })
 
     const emailErrors = computed(() => {
@@ -83,14 +113,38 @@ export default {
       return errors
     })
 
+    const nameErrors = computed(() => {
+      const errors = []
+      if (!v$.name.$invalid || !v$.name.$dirty) return errors
+      v$.name.required.$invalid && errors.push('Name is required')
+      return errors
+    })
+
+    const phoneErrors = computed(() => {
+      const errors = []
+      if (!v$.phone.$invalid || !v$.phone.$dirty) return errors
+      v$.phone.required.$invalid && errors.push('Name is required')
+      return errors
+    })
+
     const handleSubmit = async () => {
-      const { $fireAuth, $router, $toast } = root
+      const { $fireAuth, $toast, $fireDb, $router } = root
       try {
-        await $fireAuth.signInWithEmailAndPassword(
-          userEmail.value,
-          password.value
-        )
-        $toast.success('Welcome back', { duration: 3000 })
+        await $fireAuth
+          .createUserWithEmailAndPassword(userEmail.value, password.value)
+          .then((authUser) => {
+            const data = {
+              email: userEmail.value,
+              password: password.value,
+              name: name.value,
+              phone: phone.value,
+              id: authUser.user.uid,
+            }
+            const ref = $fireDb.ref().child('owners')
+            ref.child(authUser.user.uid).set(data)
+          })
+          .catch((e) => $toast.error(e, { duration: 3000 }))
+        $toast.success('Welcome!', { duration: 3000 })
         $router.go('/')
       } catch (e) {
         $toast.error(e, { duration: 3000 })
@@ -100,8 +154,12 @@ export default {
     return {
       userEmail,
       password,
+      name,
+      phone,
       emailErrors,
       passwordErrors,
+      nameErrors,
+      phoneErrors,
       handleSubmit,
       v$,
     }
